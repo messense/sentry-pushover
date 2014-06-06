@@ -87,8 +87,8 @@ class PushoverNotifications(Plugin):
         if not is_new or not self.is_setup(event.project):
             return
 
-        # https://github.com/getsentry/sentry/blob/master/src/sentry/models.py#L353
         if event.level < int(self.get_option('severity', event.project)):
+            self.logger.info('Event level %i ignored' % event.level)
             return
 
         title = '%s: %s' % (event.get_level_display().upper(), event.error().split('\n')[0])
@@ -123,6 +123,7 @@ class PushoverNotifications(Plugin):
             'url_title': 'More info',
             'priority': priority,
         }
+        self.logger.debug('Sending notification to Pushover...')
         res = requests.post('https://api.pushover.net/1/messages.json', params=params)
         if not res.ok:
             self.logger.error('Error happend when send message to Pushover, status code: %i' % res.status_code)
