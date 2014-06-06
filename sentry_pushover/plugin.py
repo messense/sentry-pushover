@@ -85,6 +85,7 @@ class PushoverNotifications(Plugin):
         ):
 
         if not is_new or not self.is_setup(event.project):
+            self.logger.debug('Old event or Pushover plugin not properly configured')
             return
 
         if event.level < int(self.get_option('severity', event.project)):
