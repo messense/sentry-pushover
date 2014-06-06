@@ -84,8 +84,12 @@ class PushoverNotifications(Plugin):
         **kwargs
         ):
 
-        if not is_new or not self.is_setup(event.project):
-            self.logger.debug('Old event or Pushover plugin not properly configured')
+        if not is_new:
+            self.logger.debug('Ignored an old event')
+            return
+
+        if not self.is_setup(event.project):
+            self.logger.debug('Pushover plugin not properly configured')
             return
 
         if event.level < int(self.get_option('severity', event.project)):
@@ -101,7 +105,7 @@ class PushoverNotifications(Plugin):
         message += '%s: %s\n' % (_('Logger'), event.logger)
         message += '%s: %s\n' % (_('Message'), event.message)
 
-        safe_execute(self.send_notification, message, link, event)
+        safe_execute(self.send_notification, title,  message, link, event)
 
     def send_notification(
         self,
