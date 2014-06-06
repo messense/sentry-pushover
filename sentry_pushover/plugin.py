@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 '''
@@ -24,29 +23,29 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Sentry-Pushover.  If not, see <http://www.gnu.org/licenses/>.
 '''
-
-from django import forms
 import logging
-from sentry.conf import settings
-from sentry.plugins import Plugin
-
-import sentry_pushover
 import requests
+import sentry_pushover
+from django import forms
+from django.conf import settings
+from django.utils.translation import ugettext_lazy as _
+from sentry.plugins import Plugin
+from sentry.utils.safe import safe_execute
 
 
 class PushoverSettingsForm(forms.Form):
 
-    userkey = forms.CharField(help_text='Your user key. See https://pushover.net/')
-    apikey = forms.CharField(help_text='Application API token. See https://pushover.net/apps/')
+    userkey = forms.CharField(help_text=_('Your user key. See https://pushover.net/'))
+    apikey = forms.CharField(help_text=_('Application API token. See https://pushover.net/apps/'))
 
     choices = ((logging.CRITICAL, 'CRITICAL'), (logging.ERROR, 'ERROR'), (logging.WARNING,
                'WARNING'), (logging.INFO, 'INFO'), (logging.DEBUG, 'DEBUG'))
     severity = forms.ChoiceField(choices=choices,
-                                 help_text="Don't send notifications for events below this level.")
+                                 help_text=_("Don't send notifications for events below this level."))
 
     priority = \
         forms.BooleanField(required=False,
-                           help_text='High-priority notifications, also bypasses quiet hours.')
+                           help_text=_('High-priority notifications, also bypasses quiet hours.'))
 
 
 class PushoverNotifications(Plugin):
@@ -54,9 +53,12 @@ class PushoverNotifications(Plugin):
     author = 'Janez Troha'
     author_url = 'http://dz0ny.info'
     title = 'Pushover'
+    description = "Integrates Pushover notification"
 
-    conf_title = 'Pushover'
+    title = _('Pushover')
+    conf_title = title
     conf_key = 'pushover'
+    slug = 'pushover'
 
     resource_links = [
         ('Bug Tracker', 'https://github.com/dz0ny/sentry-pushover/issues'),
@@ -92,12 +94,12 @@ class PushoverNotifications(Plugin):
 
         link = '%s/%s/group/%d/' % (settings.URL_PREFIX, group.project.slug, group.id)
 
-        message = 'Server: %s\n' % event.server_name
-        message += 'Group: %s\n' % event.group
-        message += 'Logger: %s\n' % event.logger
-        message += 'Message: %s\n' % event.message
+        message = '%s: %s\n' % (_('Server'), event.server_name)
+        message += '%s: %s\n' % (_('Group'), event.group)
+        message += '%s: %s\n' % (_('Logger'), event.logger)
+        message += '%s: %s\n' % (_('Message'), event.message)
 
-        self.send_notification(title, message, link, event)
+        safe_execute(self.send_notification, message, link, event)
 
     def send_notification(
         self,
