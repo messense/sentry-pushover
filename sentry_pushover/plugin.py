@@ -67,6 +67,7 @@ class PushoverNotifications(Plugin):
 
     version = sentry_pushover.VERSION
     project_conf_form = PushoverSettingsForm
+    logger = logging.getLogger('sentry.plugins.pushover')
 
     def can_enable_for_projects(self):
         return True
@@ -110,7 +111,9 @@ class PushoverNotifications(Plugin):
         ):
 
         # see https://pushover.net/api
-
+        priority = 0
+        if self.get_option('priority', event.project):
+            priority = 1
         params = {
             'user': self.get_option('userkey', event.project),
             'token': self.get_option('apikey', event.project),
@@ -118,6 +121,13 @@ class PushoverNotifications(Plugin):
             'title': title,
             'url': link,
             'url_title': 'More info',
-            'priority': self.get_option('priority', event.project),
-            }
-        requests.post('https://api.pushover.net/1/messages.json', params=params)
+            'priority': priority,
+        }
+        res = requests.post('https://api.pushover.net/1/messages.json', params=params)
+        if not res.ok:
+            self.logger.error('Error happend when send message to Pushover, status code: %i' % res.status_code)
+        else:
+            if res.json().get('status', 0) != 1:
+                self.logger.error('Notification failed to be sent to Pushover')
+            else:
+                self.logger.info('Notification sent to Pushover successfully')
