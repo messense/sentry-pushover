@@ -98,7 +98,7 @@ class PushoverNotifications(Plugin):
 
         title = '%s: %s' % (event.get_level_display().upper(), event.error().split('\n')[0])
 
-        link = '%s/%s/group/%d/' % (settings.URL_PREFIX, group.project.slug, group.id)
+        link = '%s/%s/group/%d/' % (settings.SENTRY_URL_PREFIX, group.project.slug, group.id)
 
         message = '%s: %s\n' % (_('Server'), event.server_name)
         message += '%s: %s\n' % (_('Group'), event.group)
